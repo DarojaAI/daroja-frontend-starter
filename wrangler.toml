@@ -1,0 +1,7 @@
+name = "REPLACE-WITH-PROJECT-NAME"
+main = "src/worker.ts"
+compatibility_date = "2026-05-21"
+
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"

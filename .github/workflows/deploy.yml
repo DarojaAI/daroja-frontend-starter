@@ -1,0 +1,61 @@
+name: Deploy Frontend
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options: [dev, prod]
+
+jobs:
+  checks:
+    name: Pre-deploy Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - uses: DarojaAI/infra-actions/tool/check/typescript@main
+        with:
+          working_directory: .
+      - uses: DarojaAI/infra-actions/tool/check/eslint@main
+        with:
+          working_directory: .
+          max_warnings: 0
+      - uses: DarojaAI/infra-actions/tool/check/vitest@main
+        with:
+          working_directory: .
+          coverage: false
+      - uses: DarojaAI/infra-actions/tool/check/npm-audit@main
+        with:
+          working_directory: .
+          audit_level: moderate
+          production_only: true
+
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment }}
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Build Frontend
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL }}
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
