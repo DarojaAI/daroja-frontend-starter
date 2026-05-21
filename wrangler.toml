@@ -1,3 +1,7 @@
+# NOTE: This is a template. The deploy workflow generates
+# wrangler.{environment}.toml at build time with the actual Worker name.
+# name = "{repo-name}-{environment}"
+
 name = "REPLACE-WITH-PROJECT-NAME"
 main = "src/worker.ts"
 compatibility_date = "2026-05-21"

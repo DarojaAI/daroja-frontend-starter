@@ -4,10 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to deploy'
+        description: 'Environment to deploy (must match a GitHub Environment)'
         required: true
-        type: choice
-        options: [dev, prod]
+        type: string
 
 jobs:
   checks:
@@ -42,6 +41,7 @@ jobs:
     needs: checks
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -53,9 +53,25 @@ jobs:
         run: npm run build
         env:
           VITE_API_BASE_URL: ${{ vars.API_BASE_URL }}
+          VITE_ENV: ${{ github.event.inputs.environment }}
+      - name: Generate wrangler config
+        env:
+          ENV_NAME: ${{ github.event.inputs.environment }}
+        run: |
+          cat > "wrangler.${ENV_NAME}.toml" << EOF
+          name = "${{ github.event.repository.name }}-${ENV_NAME}"
+          main = "src/worker.ts"
+          compatibility_date = "2026-05-21"
+
+          [assets]
+          directory = "./dist"
+          not_found_handling = "single-page-application"
+          EOF
+          echo "Generated wrangler.${ENV_NAME}.toml:"
+          cat "wrangler.${ENV_NAME}.toml"
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+          command: deploy -c wrangler.${{ github.event.inputs.environment }}.toml

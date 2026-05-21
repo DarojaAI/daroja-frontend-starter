@@ -6,7 +6,7 @@ Template for new DarojaAI frontend projects.
 
 - Vite 7 + React 19 + TypeScript
 - Vitest for testing
-- Cloudflare Pages + Workers deployment
+- Cloudflare Workers + Static Assets deployment
 - DarojaAI/infra-actions CI/CD
 - SPA routing with Cloudflare SPA fallback
 
@@ -18,8 +18,8 @@ cp -r daroja-frontend-starter my-new-project
 cd my-new-project
 
 # 2. Replace placeholders
-# - wrangler.toml: update `name`
 # - README.md: replace with project-specific docs
+# - package.json: update `name`
 
 # 3. Initialize
 git init
@@ -46,21 +46,28 @@ npm run test       # Vitest
 
 ## Deployment
 
-### CI (automatic)
+See [DEPLOYMENT_LESSONS.md](./DEPLOYMENT_LESSONS.md) for detailed hard-won lessons.
 
-On push/PR to `main`, CI runs type check, lint, tests, npm audit.
+### Prerequisites
 
-### Deploy (manual)
+1. Create GitHub Environments (`dev`, `prod`, etc.)
+2. Add **per-environment** secrets and variables:
+   - `CLOUDFLARE_API_TOKEN` (secret)
+   - `CLOUDFLARE_ACCOUNT_ID` (variable)
+   - `API_BASE_URL` (variable) — backend API for this environment
+3. Ensure `src/worker.ts` exists (serves static assets via Worker)
+4. Add `Request` and `Response` to ESLint globals
+
+### Deploy (manual only)
 
 ```bash
 # In GitHub Actions, trigger workflow_dispatch
-# Select environment: dev or prod
+# Enter any environment name that matches a GitHub Environment
 ```
 
-Requires:
-- `CLOUDFLARE_API_TOKEN` (repository secret)
-- `CLOUDFLARE_ACCOUNT_ID` (repository variable)
-- `API_BASE_URL` (environment variable)
+- Each environment gets its own Worker: `REPO-NAME-{env}.workers.dev`
+- No auto-deploy on push — manual workflow_dispatch only
+- Build uses environment-specific `API_BASE_URL`
 
 ## Architecture
 
@@ -78,3 +85,4 @@ Requires:
 2. **TanStack Query handles all server state**. Use `useQuery` / `useMutation` for data.
 3. **API client is a factory** (`createApiClient()`) with interceptors for auth + errors.
 4. **Environment variables** use `VITE_` prefix for build-time injection.
+5. **Worker types**: Use inline types or `Record<string, unknown>`. Do not install `@cloudflare/workers-types` — it conflicts with Node types.
