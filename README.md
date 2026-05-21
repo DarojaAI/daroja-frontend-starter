@@ -10,7 +10,7 @@ Template for new DarojaAI frontend projects.
 - DarojaAI/infra-actions CI/CD
 - SPA routing with Cloudflare SPA fallback
 
-## Usage
+## Quick Start
 
 ```bash
 # 1. Copy this template
@@ -46,28 +46,9 @@ npm run test       # Vitest
 
 ## Deployment
 
-See [DEPLOYMENT_LESSONS.md](./DEPLOYMENT_LESSONS.md) for detailed hard-won lessons.
+**Start here:** [DEPLOY.md](./DEPLOY.md) — step-by-step guide
 
-### Prerequisites
-
-1. Create GitHub Environments (`dev`, `prod`, etc.)
-2. Add **per-environment** secrets and variables:
-   - `CLOUDFLARE_API_TOKEN` (secret)
-   - `CLOUDFLARE_ACCOUNT_ID` (variable)
-   - `API_BASE_URL` (variable) — backend API for this environment
-3. Ensure `src/worker.ts` exists (serves static assets via Worker)
-4. Add `Request` and `Response` to ESLint globals
-
-### Deploy (manual only)
-
-```bash
-# In GitHub Actions, trigger workflow_dispatch
-# Enter any environment name that matches a GitHub Environment
-```
-
-- Each environment gets its own Worker: `REPO-NAME-{env}.workers.dev`
-- No auto-deploy on push — manual workflow_dispatch only
-- Build uses environment-specific `API_BASE_URL`
+**Troubleshooting:** [DEPLOYMENT_LESSONS.md](./DEPLOYMENT_LESSONS.md) — what went wrong and why
 
 ## Architecture
 
