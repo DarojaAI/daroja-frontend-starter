@@ -1,5 +1,7 @@
 # DarojaAI Frontend Starter
 
+> **Category:** 5. Shared Libraries & Templates — *Vite + React + TypeScript project template*
+
 Template for new DarojaAI frontend projects.
 
 ## Features
@@ -9,6 +11,10 @@ Template for new DarojaAI frontend projects.
 - Cloudflare Workers + Static Assets deployment
 - DarojaAI/infra-actions CI/CD
 - SPA routing with Cloudflare SPA fallback
+
+## Generated Projects
+
+No projects have been generated from this template yet. To generate a new frontend, see the [Quick Start](#quick-start) section.
 
 ## Quick Start
 
