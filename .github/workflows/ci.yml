@@ -3,12 +3,26 @@ name: CI
 on:
   push:
     branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'yarn.lock'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'yarn.lock'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/ci.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: hashFiles('package.json') != ''
+
 
     steps:
       - name: Checkout code
