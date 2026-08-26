@@ -6,8 +6,9 @@ Template for new DarojaAI frontend projects.
 
 ## Features
 
-- Vite 7 + React 19 + TypeScript
-- Vitest for testing
+- Vite 8 + React 19 + TypeScript 6
+- Vitest 4 for testing
+- MUI v9 + Emotion theming with brand-token bridge
 - Cloudflare Workers + Static Assets deployment
 - DarojaAI/infra-actions CI/CD
 - SPA routing with Cloudflare SPA fallback
@@ -63,7 +64,7 @@ npm run test       # Vitest
 | Server state | TanStack Query |
 | Client state | Zustand |
 | API transport | Axios + factory |
-| Styling | (project-specific) |
+| Styling | MUI v9 + Emotion (brand tokens) |
 | Testing | Vitest |
 
 ## Rules
@@ -73,3 +74,21 @@ npm run test       # Vitest
 3. **API client is a factory** (`createApiClient()`) with interceptors for auth + errors.
 4. **Environment variables** use `VITE_` prefix for build-time injection.
 5. **Worker types**: Use inline types or `Record<string, unknown>`. Do not install `@cloudflare/workers-types` — it conflicts with Node types.
+
+## Brand tokens
+
+Tokens are the **single source of truth** from `DarojaAI/design-artifacts`.
+
+- Canonical machine-readable form: `DarojaAI/design-artifacts/tokens.json`
+- Scale/type ramp: `DarojaAI/design-artifacts/brands/daroja.json`
+- Theme bridge: `src/theme/mui-theme.ts` — maps tokens to MUI v9 `ThemeOptions`
+
+### Accent system
+
+The starter ships with a four-accent system (`gold`, `azure`, `green`, `red`).
+
+- **Default accent:** gold (`#E6B340`)
+- **Swappable at runtime:** set `data-accent` on `<html>` element
+- **To change a generated project's accent:** edit `src/theme/mui-theme.ts` — do NOT add new tokens
+
+The `tokens.ts` file extracts the values from `design-artifacts/tokens.json` and `brands/daroja.json`. When the org publishes a shared package, replace the import with that package path.
