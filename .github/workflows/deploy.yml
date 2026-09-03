@@ -14,11 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - uses: DarojaAI/infra-actions/tool/check/typescript@main
         with:
           working_directory: .
@@ -30,7 +33,7 @@ jobs:
         with:
           working_directory: .
           coverage: false
-      - uses: DarojaAI/infra-actions/tool/check/npm-audit@main
+      - uses: DarojaAI/infra-actions/tool/check/pnpm-audit@main
         with:
           working_directory: .
           audit_level: moderate
@@ -44,13 +47,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - name: Build Frontend
-        run: npm run build
+        run: pnpm build
         env:
           VITE_API_BASE_URL: ${{ vars.API_BASE_URL }}
           VITE_ENV: ${{ github.event.inputs.environment }}
