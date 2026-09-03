@@ -11,14 +11,32 @@ permissions:
 
 jobs:
   gitleaks:
-    name: gitleaks
+    name: gitleaks (v8.18.0)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+
+      # Install gitleaks CLI directly. The `gitleaks/gitleaks-action@v2`
+      # wrapper requires a license and has a stripped-down `args:` schema;
+      # installing the CLI matches the pre-commit v8.18.0 pin without any
+      # license friction. Version is pinned by SHA via the release tarball.
+      - name: Download gitleaks v8.18.0
+        run: |
+          curl -sSL \
+            -o /tmp/gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v8.18.0/gitleaks_8.18.0_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Run gitleaks detect
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: --config-path .gitleaks.toml --redact --no-banner
+        run: |
+          # `detect` uses the embedded ruleset (same one pre-commit uses).
+          # `--redact` masks findings in the report. `--no-banner` keeps
+          # log lines short. Exits non-zero on any finding -> CI fails.
+          gitleaks detect --redact --no-banner --source .
