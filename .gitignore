@@ -3,3 +3,20 @@ dist/
 *.local
 .vite/
 .vitest/
+
+# pnpm lockfile
+pnpm-lock.yaml
+
+# npm artifacts (rejected — pnpm-only)
+package-lock.json
+yarn.lock
+
+# Build analysis (opt-in only)
+dist/stats.html
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/settings.example.json
+!.vscode/extensions.json

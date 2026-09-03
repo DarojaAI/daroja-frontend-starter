@@ -1,0 +1,40 @@
+# Pre-commit hooks — mirrors .github/workflows/ci.yml gates.
+# Install once per checkout: `pre-commit install`.
+#
+# Hooks run locally before `git commit`. CI re-runs the same checks
+# (lint, type-check, test, build, gitleaks) on every push + PR.
+#
+# Reference: see docs/USING_STARTER.md "Pre-commit + CI mirroring".
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.3.3
+    hooks:
+      - id: prettier
+        types_or: [ts, tsx, js, jsx, json, yaml, markdown]
+
+  # pnpm dlx keeps eslint version alignment with package.json devDeps
+  # (no separate Python venv needed for the hook runner).
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint (warnings as errors)
+        language: system
+        entry: pnpm lint --max-warnings 0
+        pass_filenames: false
+        types: [ts, tsx]
