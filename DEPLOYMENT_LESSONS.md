@@ -1,5 +1,10 @@
 # Deployment Lessons Learned
 
+> Originated during the 2026-08 deployment hardening pass and updated through
+> the 2026-08-30 incident. The current canonical lockfile / package-manager
+> posture is **pnpm-only** — see [`docs/USING_STARTER.md`](./docs/USING_STARTER.md)
+> §2 "What you inherit" for the full contract.
+
 ## Workers + Static Assets (not Pages)
 
 **What we learned:**
@@ -133,11 +138,17 @@ on:
 
 ```yaml
 - name: Build Frontend
-  run: npm run build
+  run: pnpm build
   env:
     VITE_API_BASE_URL: ${{ vars.API_BASE_URL }}
     VITE_ENV: ${{ github.event.inputs.environment }}
 ```
+
+## Subagent + Lockfile Drift
+
+**What we learned (2026-08-30 incident followup):**
+- An `npm install` step covered by `--legacy-peer-deps` will write a `package-lock.json` even if `.gitignore` rejects it locally — accidental regeneration can land via a subagent dispatch in a way that bypasses the gate.
+- Mitigation: `corepack` pinning is the single source of truth; if a contributor or subagent ever reaches for `npm install`, abort the change and re-run via `pnpm install --frozen-lockfile`.
 
 ## Dead Workflows to Remove
 
@@ -146,17 +157,20 @@ on:
 - `claude.yml` / `claude-code-review.yml` — depends on ANTHROPIC_API_KEY, adds noise
 - `pre-commit.yml` with `continue-on-error` — masks real failures
 - Composite actions with broken YAML (missing `steps:` key)
+- `gitleaks/gitleaks-action@v2` — requires a `GITLEAKS_LICENSE` secret the org does not provide, AND strips the `args:` input schema. Replaced by direct CLI install of gitleaks v8.18.0 (matches the pre-commit hook version).
 
 ## Summary Checklist
 
 Before first deploy on a new project:
 
-1. [ ] Create GitHub Environments (`dev`, `prod`, etc.)
-2. [ ] Add `CLOUDFLARE_API_TOKEN` to **each** environment's secrets
-3. [ ] Add `CLOUDFLARE_ACCOUNT_ID` to **each** environment's variables
-4. [ ] Add `API_BASE_URL` to **each** environment's variables
-5. [ ] Ensure `src/worker.ts` exists with inline types
-6. [ ] Ensure ESLint globals include `Request`, `Response`
-7. [ ] Verify `wrangler.toml` has `[assets]` block
-8. [ ] Confirm deploy workflow uses `type: string` (not choice)
-9. [ ] Confirm deploy job declares `environment:`
+1. [ ] Bootstrap tooling: `corepack enable && pnpm install --frozen-lockfile && pnpm exec pre-commit install`
+2. [ ] Create GitHub Environments (`dev`, `prod`, etc.)
+3. [ ] Add `CLOUDFLARE_API_TOKEN` to **each** environment's secrets
+4. [ ] Add `CLOUDFLARE_ACCOUNT_ID` to **each** environment's variables
+5. [ ] Add `API_BASE_URL` to **each** environment's variables
+6. [ ] Ensure `src/worker.ts` exists with inline types
+7. [ ] Ensure ESLint globals include `Request`, `Response`
+8. [ ] Verify `wrangler.toml` has `[assets]` block
+9. [ ] Confirm deploy workflow uses `type: string` (not choice)
+10. [ ] Confirm deploy job declares `environment:`
+11. [ ] Confirm only `pnpm-lock.yaml` is committed; reject `package-lock.json` / `yarn.lock`

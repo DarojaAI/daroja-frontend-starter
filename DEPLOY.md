@@ -2,6 +2,11 @@
 
 Deploy a React + Vite frontend to Cloudflare Workers with static assets.
 
+> Generated downstream projects inherit pnpm-only deploy conventions — see
+> [`docs/USING_STARTER.md`](./docs/USING_STARTER.md) §6 "Deploy" for the full
+> contract. This file is the per-step walkthrough; the runbook discipline is the
+> canonical read.
+
 ## What You Get
 
 | Environment | Worker Name | URL |
@@ -35,7 +40,20 @@ In your repo, create one Environment per deployment target:
 
 > **Critical:** The token goes in **Environment secrets**, not repository secrets. The `environment:` declaration in the workflow is what makes this work.
 
-### 3. Files in This Repo
+### 3. Local bootstrap
+
+This template enforces pnpm-only. Enable corepack and activate the pinned version once per checkout:
+
+```bash
+corepack enable
+corepack prepare pnpm@latest --activate
+pnpm install --frozen-lockfile
+pnpm exec pre-commit install
+```
+
+Do **not** run `npm install`, `yarn install`, or `pnpm install` outside corepack — the lockfile discipline only holds if every contributor uses the same package manager version.
+
+### 4. Files in This Repo
 
 Ensure these files exist:
 
@@ -53,7 +71,7 @@ Ensure these files exist:
 3. Click **Run workflow**
 
 The workflow will:
-1. Run type check, lint, tests, npm audit
+1. Run type check, lint, tests, pnpm audit
 2. Build the frontend with the environment's `API_BASE_URL`
 3. Generate `wrangler.{env}.toml` with the correct Worker name
 4. Deploy to Cloudflare
@@ -69,7 +87,8 @@ The workflow will:
 | Error | Cause | Fix |
 |---|---|---|
 | `Authentication error [code: 10000]` | `CLOUDFLARE_API_TOKEN` not in environment secrets | Add token to the GitHub Environment |
-| `Invalid token [code: 9106]` | Wrong token value | Regenerate token in Cloudflare, paste into GitHub |
+| `Invalid token [code: 9106]` | Wrong token value | Regenerate token in Cloudflare, paste into GH Environment |
 | `not a Pages project [code: 8000007]` | Using Pages instead of Workers | This setup uses Workers + `[assets]`, not Pages |
 | ESLint `'Request' is not defined` | Missing ESLint globals | Add `Request: 'readonly'` to globals |
 | TypeScript errors after installing workers types | `@cloudflare/workers-types` conflicts with Node types | Do not install it; use inline types in `worker.ts` |
+| `npm install` / `yarn install` written by mistake | Lockfile is now pnpm-only | Run `rm -f package-lock.json yarn.lock && pnpm install --frozen-lockfile`, then commit |
