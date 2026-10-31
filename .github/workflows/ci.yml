@@ -7,12 +7,18 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - '.github/workflows/ci.yml'
+      # Stdlib surface changes (src/api/envelope.ts) must be gated by CI —
+      # downstream projects pin their imports of these helpers.
+      - 'src/**'
+      - 'docs/**'
   pull_request:
     branches: [main]
     paths:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - '.github/workflows/ci.yml'
+      - 'src/**'
+      - 'docs/**'
 
 jobs:
   build:
@@ -44,7 +50,9 @@ jobs:
         run: pnpm lint
 
       - name: Run tests
-        run: pnpm test --run
+        # `pnpm test --run` is rejected by pnpm 9 ('Unknown option: run') —
+        # pnpm does not forward bare flags to the script. Use `pnpm run`.
+        run: pnpm run test --run
 
       - name: Build
         run: pnpm build

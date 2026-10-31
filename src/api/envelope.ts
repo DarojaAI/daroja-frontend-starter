@@ -32,6 +32,26 @@ export interface Envelope {
   headers?: Record<string, string | string[] | undefined>;
 }
 
+/**
+ * A response wrapped in the org-standard API envelope (RFC `.github#52` / 0004).
+ *
+ * - `data`        — the original response body.
+ * - `provenance`  — where the body came from and when. `signature` is an
+ *                   optional integrity tag: the org reference implementation
+ *                   (`py-daroja-libs` → `common/service/envelope.py`) treats
+ *                   it as optional and omits it when no signing key is
+ *                   configured, and no backend in the family signs responses.
+ *                   Its absence does NOT make an envelope lying.
+ */
+export interface ApiEnvelope<T> {
+  data: T;
+  provenance?: {
+    source?: string;
+    captured_at?: string;
+    signature?: string;
+  };
+}
+
 const hasOwn = (obj: object, key: string): boolean =>
   Object.prototype.hasOwnProperty.call(obj, key);
 
@@ -78,4 +98,58 @@ export function isLyingEnvelope(envelope: Envelope): boolean {
   if (typeof error === 'string' && error.trim() === '') return false;
 
   return true;
+}
+
+/**
+ * Returns true when an API envelope claims authoritative data but omits
+ * required provenance.
+ *
+ * This is the **provenance-completeness** predicate — a different
+ * contract from `isLyingEnvelope` above, which detects the
+ * success/error contradiction in a `{body, status, headers}` envelope.
+ * The two are separate helpers with separate names on purpose; they were
+ * previously the same name in two forks, which is what issue #10 tracks.
+ *
+ * Required provenance fields are `source` and `captured_at`. `signature`
+ * is optional — its absence does not make an envelope lying. The org
+ * reference implementation treats it as an "opaque; optional integrity
+ * tag" and omits it when no signing key is configured, and no backend
+ * in the family signs responses.
+ *
+ * Pure function. No I/O, no logging, no telemetry.
+ */
+export function isLyingApiEnvelope<T>(env: ApiEnvelope<T>): boolean {
+  if (env && typeof env === 'object' && 'data' in env) {
+    const p = env.provenance;
+    return !p || !p.source || !p.captured_at;
+  }
+  return true;
+}
+
+/**
+ * Unwrap an API response that may or may not be envelope-wrapped.
+ *
+ * - If `raw` has the shape `{ data, provenance }` it is treated as an
+ *   `ApiEnvelope<T>`. The provenance is validated via
+ *   `isLyingApiEnvelope`; when the server omits required provenance
+ *   fields, `lying` is set to `true` so callers can surface a clear
+ *   error.
+ * - If `raw` is a plain model (no `data` key), it is returned as-is.
+ *
+ * This preserves backward-compat: backends that haven't adopted the
+ * envelope yet keep working.
+ *
+ * Pure function. No I/O, no logging, no telemetry.
+ */
+export function unwrapEnvelope<T>(raw: unknown): { data: T; lying?: boolean } {
+  if (
+    raw !== null &&
+    typeof raw === 'object' &&
+    'data' in raw &&
+    'provenance' in raw
+  ) {
+    const env = raw as ApiEnvelope<T>;
+    return { data: env.data, lying: isLyingApiEnvelope(env) };
+  }
+  return { data: raw as T };
 }
