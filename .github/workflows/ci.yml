@@ -11,6 +11,10 @@ on:
       # downstream projects pin their imports of these helpers.
       - 'src/**'
       - 'docs/**'
+      # The §8 conformance ratchet itself must be gated: a change to the
+      # check or its baseline is exactly the kind of change that must not
+      # slip through ungated.
+      - 'scripts/**'
   pull_request:
     branches: [main]
     paths:
@@ -19,6 +23,7 @@ on:
       - '.github/workflows/ci.yml'
       - 'src/**'
       - 'docs/**'
+      - 'scripts/**'
 
 jobs:
   build:
