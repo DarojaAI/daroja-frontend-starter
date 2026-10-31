@@ -24,3 +24,7 @@ dist/stats.html
 .vscode/*
 !.vscode/settings.example.json
 !.vscode/extensions.json
+
+# Python bytecode (the §8 conformance parser)
+__pycache__/
+*.pyc
