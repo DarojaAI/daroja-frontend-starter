@@ -5,7 +5,11 @@ dist/
 .vitest/
 
 # pnpm lockfile
-pnpm-lock.yaml
+# The lockfile IS committed. CI runs `pnpm install --frozen-lockfile`,
+# which requires pnpm-lock.yaml to exist — ignoring it made every CI
+# run fail at the install step with ERR_PNPM_NO_LOCKFILE (red since
+# 2026-09-04). A pnpm-only repo commits its lockfile; that is what
+# makes the frozen install reproducible.
 
 # npm artifacts (rejected — pnpm-only)
 package-lock.json
