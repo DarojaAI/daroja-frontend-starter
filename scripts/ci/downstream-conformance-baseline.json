@@ -1,0 +1,65 @@
+{
+  "_note": "§8 downstream-conformance ratchet. Drift metrics may only DECREASE; adoption metrics may only INCREASE. Raising a drift count or lowering an adoption count requires editing this file AND appending to this ledger. The baseline is the only reviewable escape hatch. See docs/DOWNSTREAM_CONFORMANCE.md. | DarojaAI/daroja-frontend-starter: 2026-10-31: baseline the starter itself (reference implementation) | DarojaAI/dev-nexus-frontend: 2026-10-31: snapshot of current state | DarojaAI/daroja-intelligence-console: 2026-10-31: snapshot of current state",
+  "starter_floors": {
+    "vite": "8.1.0",
+    "typescript": "6.0.3",
+    "@mui/material": "9.1.2",
+    "vitest": "4.1.9"
+  },
+  "starter_canonical_stdlib_exports": [
+    "ApiEnvelope",
+    "isLyingApiEnvelope",
+    "unwrapEnvelope"
+  ],
+  "starter_canonical_stdlib_signatures": {
+    "Envelope": "interface Envelope",
+    "ApiEnvelope": "interface ApiEnvelope<T>",
+    "isLyingEnvelope": "function isLyingEnvelope(envelope:Envelope):boolean",
+    "isLyingApiEnvelope": "function isLyingApiEnvelope<T>(env:ApiEnvelope<T>):boolean",
+    "unwrapEnvelope": "function unwrapEnvelope<T>(raw:unknown):{ data:T; lying?:boolean }"
+  },
+  "required_ci_surfaces": {
+    ".pre-commit-config.yaml": "pre-commit hooks mirrored from the starter",
+    ".github/workflows/gitleaks.yml": "gitleaks CI surface",
+    "DEPLOYMENT_LESSONS.md": "deployment lessons carried forward from the starter"
+  },
+  "forbidden_files": {
+    "package-lock.json": "npm artifacts are rejected — pnpm-only org policy",
+    "yarn.lock": "npm artifacts are rejected — pnpm-only org policy"
+  },
+  "consumers": {
+    "DarojaAI/daroja-frontend-starter": {
+      "deps_below_floor": 0,
+      "missing_required_files": 0,
+      "forbidden_files": 0,
+      "npm_package_manager": 0,
+      "cloudflare_workers_types": 0,
+      "starter_aliases_redefined": 0,
+      "stdlib_adoption": 3,
+      "stdlib_unknown_exports": 0,
+      "stdlib_signature_divergent": 0
+    },
+    "DarojaAI/dev-nexus-frontend": {
+      "deps_below_floor": 0,
+      "missing_required_files": 2,
+      "forbidden_files": 0,
+      "npm_package_manager": 0,
+      "cloudflare_workers_types": 0,
+      "starter_aliases_redefined": 0,
+      "stdlib_adoption": 0,
+      "stdlib_unknown_exports": 0,
+      "stdlib_signature_divergent": 1
+    },
+    "DarojaAI/daroja-intelligence-console": {
+      "deps_below_floor": 4,
+      "missing_required_files": 3,
+      "forbidden_files": 0,
+      "npm_package_manager": 0,
+      "cloudflare_workers_types": 1,
+      "starter_aliases_redefined": 1,
+      "stdlib_adoption": 2,
+      "stdlib_unknown_exports": 0,
+      "stdlib_signature_divergent": 1
+    }
+  }
+}

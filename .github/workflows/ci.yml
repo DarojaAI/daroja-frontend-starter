@@ -56,3 +56,9 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Check §8 downstream conformance (ratchet)
+        # The starter is the definition site for the §8 contract; this
+        # check is what stops a downstream from drifting away from it
+        # unnoticed. See docs/DOWNSTREAM_CONFORMANCE.md.
+        run: scripts/ci/check-downstream-conformance.sh --self
