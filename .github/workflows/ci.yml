@@ -28,7 +28,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: hashFiles('package.json') != ''
 
     steps:
       - name: Checkout code
