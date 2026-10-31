@@ -126,6 +126,31 @@ a ratchet that starts at zero is a gate, and a gate that fires on the
 first run is a gate nobody runs. The baseline records reality; every
 metric can only improve from here.
 
+## Keeping the mirrors in sync
+
+Each consumer holds a copy of the baseline, and each copy carries the
+registry of **every** consumer. A consumer's own entry is what its own
+check compares against; the other entries are informational.
+
+That means a copy can drift from the starter's. Two rules make that
+safe:
+
+1. **A stale registry entry only ever makes the check more lenient, never
+   falsely failing.** If a consumer fixes a violation and updates its own
+   entry (4 -> 2) while the starter's copy still says 4, the consumer's
+   check compares 2 against 4 and passes with a negative delta. Nothing
+   breaks; the improvement is simply forgotten by the shared copy.
+2. **Improvements should be mirrored BACK to the starter**, so the
+   org-wide registry reflects reality. When a consumer lowers a drift
+   count or raises an adoption count, open a companion PR against
+   `daroja-frontend-starter` carrying the same one-line baseline edit
+   (with its own `--note`), or include that edit in the same change
+   when the repos are being touched together.
+
+Rule 1 is what makes the whole thing safe to ship with violations
+already present: a consumer that never touches its baseline copy still
+gets a working, meaningful gate.
+
 ## What this does not do
 
 - It does not check *content* of the mirrored files beyond the stdlib
