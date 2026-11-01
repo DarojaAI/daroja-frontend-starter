@@ -14,9 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      # v6 reads the pnpm version from package.json's `packageManager`
+      # field (pnpm@9.12.0). Do NOT pass `version:` here as well —
+      # v4 rejected the run with "Multiple versions of pnpm specified"
+      # because `version: 9` and `packageManager: pnpm@9.12.0` are
+      # both present. Corepack/the `packageManager` field is the source
+      # of truth.
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -47,9 +51,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      # v6 reads the pnpm version from package.json's `packageManager`
+      # field (pnpm@9.12.0). Do NOT pass `version:` here as well —
+      # v4 rejected the run with "Multiple versions of pnpm specified"
+      # because `version: 9` and `packageManager: pnpm@9.12.0` are
+      # both present. Corepack/the `packageManager` field is the source
+      # of truth.
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
