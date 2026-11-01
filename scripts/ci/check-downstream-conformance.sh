@@ -119,15 +119,62 @@ for dep in $(jget "${BASELINE}" '.starter_floors | keys_unsorted[]'); do
   fi
 done
 
-# --- missing_required_files (drift) ---
+# --- missing_required_capabilities (drift) ---
+# CAPABILITY, not filename. A downstream can satisfy "secret scanning in
+# CI" with a dedicated `.github/workflows/gitleaks.yml` OR with a
+# gitleaks job inside its existing ci.yml — dev-nexus-frontend does the
+# latter. Demanding one exact path reported a surface that was present.
+#
+# Same lesson as the stdlib metric: comparing names instead of
+# capabilities cries wolf, and a ratchet that cries wolf gets ignored.
+#
+# A capability is satisfied when:
+#   - one of its `paths` exists, OR
+#   - a file under `content_paths` contains `content_pattern`
 missing_required=0
 missing_detail=""
-for f in $(jget "${BASELINE}" '.required_ci_surfaces | keys_unsorted[]'); do
-  if [ ! -e "${REPO_PATH}/${f}" ]; then
-    missing_required=$((missing_required + 1))
-    missing_detail="${missing_detail} ${f}"
+while IFS='|' read -r cap paths content_paths content_pattern; do
+  [ -n "${cap}" ] || continue
+  satisfied=0
+  # (a) a listed path exists
+  for f in $(printf '%s' "${paths}" | tr ',' ' '); do
+    [ -n "${f}" ] || continue
+    if [ -e "${REPO_PATH}/${f}" ]; then satisfied=1; break; fi
+  done
+  # (b) the capability is implemented inline somewhere.
+  #
+  #     Two traps this has to avoid:
+  #
+  #     1. YAML comments are stripped first — a workflow that merely
+  #        MENTIONS the tool in a comment ("Runs gitleaks in CI on every
+  #        PR...") does not run it. dev-nexus-frontend's ci.yml has
+  #        exactly that kind of comment. `grep -h` suppresses the
+  #        `filename:` prefix that grep adds across multiple files,
+  #        which would otherwise defeat the `^[[:space:]]*#` anchor.
+  #
+  #     2. The result is captured into a variable rather than piped into
+  #        `grep -q`. `grep -q` exits on first match, closing the pipe;
+  #        upstream grep then dies on SIGPIPE (141), and `pipefail`
+  #        turns that into a failed pipeline. With the naive
+  #        `find | xargs grep -q` the check reported a repo that DOES
+  #        run the capability as one that does not — a false negative,
+  #        worse than the false positive it replaced.
+  if [ "${satisfied}" -eq 0 ] && [ -n "${content_pattern}" ] && [ -n "${content_paths}" ]; then
+    for d in $(printf '%s' "${content_paths}" | tr ',' ' '); do
+      [ -n "${d}" ] || continue
+      [ -d "${REPO_PATH}/${d}" ] || continue
+      haystack="$(find "${REPO_PATH}/${d}" -type f \( -name '*.yml' -o -name '*.yaml' \) -print0 2>/dev/null \
+        | xargs -0 -r grep -h -vE '^[[:space:]]*#' 2>/dev/null || true)"
+      if printf '%s' "${haystack}" | grep -qiE -- "${content_pattern}"; then
+        satisfied=1; break
+      fi
+    done
   fi
-done
+  if [ "${satisfied}" -eq 0 ]; then
+    missing_required=$((missing_required + 1))
+    missing_detail="${missing_detail} ${cap}"
+  fi
+done < <(jget "${BASELINE}" '.required_capabilities | to_entries[] | "\(.key)|\(.value.paths // [] | join(","))|\(.value.content_paths // [] | join(","))|\(.value.content_pattern // "")"')
 
 # --- forbidden_files (drift) ---
 # Tracked-ness, not filesystem presence: §8 is about what gets COMMITTED.
@@ -239,7 +286,7 @@ if [ "${UPDATE_BASELINE}" -eq 1 ]; then
      --argjson div "${divergent}" \
      '.consumers[$name] = {
         deps_below_floor: $deps,
-        missing_required_files: $missing,
+        missing_required_capabilities: $missing,
         forbidden_files: $forbidden,
         npm_package_manager: $npmpm,
         cloudflare_workers_types: $wt,
@@ -284,7 +331,7 @@ report() { # metric direction current baseline detail
 base() { jget "${BASELINE}" ".consumers[\"${REPO_NAME}\"][\"$1\"]"; }
 
 report deps_below_floor           down "${deps_below}"       "$(base deps_below_floor)"       "${deps_detail}"
-report missing_required_files    down "${missing_required}"  "$(base missing_required_files)" "${missing_detail}"
+report missing_required_capabilities down "${missing_required}"  "$(base missing_required_capabilities)" "${missing_detail}"
 report forbidden_files            down "${forbidden_present}" "$(base forbidden_files)"       "${forbidden_detail}"
 report npm_package_manager        down "${npm_pm}"           "$(base npm_package_manager)"
 report cloudflare_workers_types   down "${workers_types}"    "$(base cloudflare_workers_types)"
