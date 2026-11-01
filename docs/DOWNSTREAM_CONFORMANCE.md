@@ -41,7 +41,7 @@ Exit codes: `0` conformant, `1` regression, `2` usage error.
 | metric | dir | what it measures |
 |---|---|---|
 | `deps_below_floor` | down | deps below the starter's floor (vite / typescript / @mui/material / vitest) |
-| `missing_required_files` | down | §8-required surfaces absent (`.pre-commit-config.yaml`, gitleaks workflow, `DEPLOYMENT_LESSONS.md`) |
+| `missing_required_capabilities` | down | §8-required capabilities absent (pre-commit hooks, secret scanning, deployment lessons) |
 | `forbidden_files` | down | npm artifacts tracked (`package-lock.json`, `yarn.lock`) |
 | `npm_package_manager` | down | `packageManager` set to `npm@` instead of pnpm |
 | `cloudflare_workers_types` | down | `@cloudflare/workers-types` installed (conflicts with Node types) |
@@ -112,7 +112,7 @@ The note is mandatory; the update is refused without it.
 | metric | starter | console | dev-nexus-frontend |
 |---|---|---|---|
 | `deps_below_floor` | 0 | 4 | 0 |
-| `missing_required_files` | 0 | 3 | 2 |
+| `missing_required_capabilities` | 0 | 3 | 1 |
 | `forbidden_files` | 0 | 0 | 0 |
 | `npm_package_manager` | 0 | 0 | 0 |
 | `cloudflare_workers_types` | 0 | 1 | 0 |
