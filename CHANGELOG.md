@@ -33,7 +33,19 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- The starter's CI had been failing on every run since 2026-09-04. Six independent causes, all fixed above: the gitignored lockfile, the tracked `package-lock.json`, the unresolvable npm `pre-commit` pin, CI not triggering on `src/**`, the `pnpm test --run` invocation, and 6 MUI-v9 type errors in a test.
+- **The starter's CI had never once succeeded** — 28 runs, 0 successes, the oldest from 2026-09-03. Eight independent causes, all fixed:
+  1. `pnpm-lock.yaml` was gitignored while CI runs `pnpm install --frozen-lockfile` → `ERR_PNPM_NO_LOCKFILE` on every run.
+  2. `package-lock.json` was tracked — forbidden by this repo's own `.gitignore`.
+  3. `pre-commit@^3.5.0` was pinned as an npm devDependency; that version does not exist on npm (latest 2.0.0), so `pnpm install` failed outright.
+  4. CI triggered only on `package.json` / `pnpm-lock.yaml` / `ci.yml`, so a change to `src/**` — the stdlib itself — never ran CI.
+  5. `pnpm test --run` is rejected by pnpm 9 ("Unknown option: run" — pnpm does not forward bare flags to the script).
+  6. 6 MUI-v9 type errors in `theme.test.ts` (`PaletteColorOptions` is a union whose `ColorPartial` member has no `main`).
+  7. The build job carried a job-level `if: hashFiles('package.json') != ''`. `hashFiles()` evaluates **before** checkout, so it always saw an empty workspace and the job was skipped — every run reported `failure` with **zero jobs spawned**.
+  8. `pnpm/action-setup@v4` was given `version: 9` while `package.json` declares `packageManager: pnpm@9.12.0`; v4 rejects that with "Multiple versions of pnpm specified". Now `pnpm/action-setup@v6`, which reads `packageManager` — the same shape the console and `dev-nexus-frontend` already use.
+
+  Cause 7 is the one that made the rest invisible: with the job never spawning, the other seven could not surface as CI failures, only as a red run with no explanation.
+
+  **This is a template**, so downstream projects that copied `ci.yml` inherited causes 7 and 8 in particular.
 
 ## [0.2.0] - 2026-09-03
 

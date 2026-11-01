@@ -28,16 +28,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: hashFiles('package.json') != ''
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Enable pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
+        # v6 reads the pnpm version from package.json's `packageManager`
+        # field (pnpm@9.12.0). Do NOT pass `version:` here as well —
+        # v4 rejected the run with "Multiple versions of pnpm specified"
+        # because `version: 9` and `packageManager: pnpm@9.12.0` were
+        # both present. The `packageManager` field is the source of truth.
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
