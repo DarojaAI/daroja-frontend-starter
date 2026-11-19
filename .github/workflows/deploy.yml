@@ -26,19 +26,20 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - uses: DarojaAI/infra-actions/tool/check/typescript@main
+      - uses: DarojaAI/public-workflows/actions/check/typescript@8941de03ddf552f483806e493bbb86e22626f1cc  # v2.1.0
         with:
           working_directory: .
-      - uses: DarojaAI/infra-actions/tool/check/eslint@main
+      - uses: DarojaAI/public-workflows/actions/check/eslint@8941de03ddf552f483806e493bbb86e22626f1cc  # v2.1.0
         with:
           working_directory: .
           max_warnings: 0
-      - uses: DarojaAI/infra-actions/tool/check/vitest@main
+      - uses: DarojaAI/public-workflows/actions/check/vitest@8941de03ddf552f483806e493bbb86e22626f1cc  # v2.1.0
         with:
           working_directory: .
           coverage: false
-      - uses: DarojaAI/infra-actions/tool/check/pnpm-audit@main
+      - uses: DarojaAI/public-workflows/actions/check/npm-audit@8941de03ddf552f483806e493bbb86e22626f1cc  # v2.1.0
         with:
+          package_manager: pnpm
           working_directory: .
           audit_level: moderate
           production_only: true
